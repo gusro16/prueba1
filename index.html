@@ -17,7 +17,7 @@
 </head><body>
 <header class="top"><div class="topline"><div class="brand">SAN LUCAS · TECNOLOGÍA INFORMÁTICA</div><div class="toplinks"><button onclick="showHome()">⌂ Todos los proyectos</button><button onclick="showButtons()">◉ Guía de pulsadores</button></div></div><div class="hero"><div><div class="brand" style="margin-bottom:12px;color:#75d8d1">OPEN DAY 2026 · 1.º AÑO</div><h1>Construí, conectá y <span>hacelo funcionar.</span></h1><p>Elegí tu proyecto de Arduino. Acá tenés los materiales, el circuito, los pines y el código listo para copiar. Todo funciona desde esta única página.</p></div><div class="hero-mark" aria-hidden="true">🤖</div></div></header>
 <div class="shell"><aside class="aside"><div class="aside-panel"><div class="side-heading">Elegí tu proyecto</div><nav class="side-list" id="sideList" aria-label="Lista de proyectos"></nav><div class="aside-hint">9 proyectos · Arduino UNO · circuitos ilustrativos · código para Arduino IDE</div></div></aside><main class="content" id="content" tabindex="-1"></main></div>
-<div class="footer">Colegio San Lucas · Robótica · Open Day 2026. Material didáctico basado en la selección de proyectos de clase. Los circuitos son esquemas de conexión, no una simulación física de Tinkercad. Probá los armados antes de mostrarlos al público.</div>
+<div class="footer">Colegio San Lucas · Robótica · Open Day 2026. Material didáctico basado en la selección de proyectos de clase. Ilustración Arduino UNO basada en Fritzing (CC BY-SA 3.0). Los circuitos son esquemas de conexión, no una simulación física de Tinkercad. Probá los armados antes de mostrarlos al público.</div>
 <div id="imageDialog" class="dialog" role="dialog" aria-label="Circuito ampliado" aria-modal="true"><button class="dialog-close" onclick="closeZoom()">Cerrar ✕</button><img id="bigImage" alt="Circuito ampliado"></div><div id="toast" aria-live="polite"></div>
 <script>
 'use strict';
@@ -47,4 +47,4 @@ function copyCode(i){copyText(P[i].code)}function copyProcessing(){copyText(PROC
 function download(filename,content){const blob=new Blob([content],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function downloadCode(i){download(P[i].id+'.ino',P[i].code)}function downloadProcessing(){download('Radar_Processing.pde',PROCESSING)}
 showHome();
-</script><script src="./circuits.js"></script></body></html>
+</script><script src="./fritzing-parts.js"></script><script src="./circuits.js"></script></body></html>
