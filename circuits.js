@@ -7,7 +7,7 @@ const isSignal=p=>/^(D\d+|A\d+)$/.test(p);
 const short=(m)=>m.replace('Potenciometro','Potenciómetro').replace('Aro metalico','Aro metálico').replace('Alambre recorrido','Alambre').replace('Buzzer PASIVO','Buzzer').replace('Pulsador ','Botón ').replace('Joystick analógico','Joystick').replace('Servo A (cabeceo)','Servo A').replace('Servo B (balanceo)','Servo B').replace('Fuente externa 5V','Fuente externa 5 V');
 const signalName=(w)=>{const s=w.terminal.toLowerCase();return s.includes('trig')?'TRIG':s.includes('echo')?'ECHO':s.includes('vrx')?'VRx':s.includes('cursor')?'central':s.includes('anodo')?'220Ω → ánodo':s.includes('senial')||s.includes('señal')?'señal':s.includes('contacto')?'contacto':s.includes('positivo')?'+':s.includes('lado a')?'lado A':s.includes('terminal a')?'borne A':w.terminal};
 const button=m=>m.startsWith('Pulsador');
-function pinPos(pin){if(/^D\d+$/.test(pin)){let n=+pin.slice(1);return {x:94+(13-n)*21,y:304,position:'top'}}let n=+pin.slice(1);return {x:302+n*21,y:633,position:'bottom'}}
+function pinPos(pin){const p=window.SANLUCAS_PARTS&&window.SANLUCAS_PARTS.pins;const k=pin==='GND'?'GND20':pin==='5V'?'+5V':pin;if(p&&p[k]){const [x,y]=p[k];return {x:35+x*(410/212.184),y:300+y*(286/148.032),position:pin.startsWith('D')?'top':'bottom'}}if(/^D\d+$/.test(pin)){let n=+pin.slice(1);return {x:94+(13-n)*21,y:304,position:'top'}}let n=+pin.slice(1);return {x:302+n*21,y:633,position:'bottom'}}
 function path(d,color,width=6){return `<path d="${d}" fill="none" stroke="#fff" stroke-width="${width+5}" stroke-linejoin="round" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`}
 function text(x,y,t,size=16,clr='#243d55',weight=600,anchor='start'){return `<text x="${x}" y="${y}" fill="${clr}" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}">${esc(t)}</text>`}
 function pill(x,y,t,bg,sz=15){const width=Math.max(42,8.5*t.length+16);return `<rect x="${x-width/2}" y="${y-19}" width="${width}" height="25" rx="7" fill="${bg}" stroke="#fff" stroke-width="2"/>${text(x,y-1,t,sz,'#fff',800,'middle')}`}
@@ -41,6 +41,7 @@ s+=text(x-39,443,'220 Ω',11,'#926b35',800,'middle');
 }else if(kind==='metal'){if(name.includes('Aro'))s+=`<circle cx="${x}" cy="473" r="41" fill="none" stroke="#aeb8bf" stroke-width="13"/><path d="M${x+38} 470 v68" stroke="#8899a6" stroke-width="8"/>`;else s+=`<path d="M${x-56} 516 Q${x-45} 438 ${x-11} 465 T${x+20} 477 T${x+57} 507" fill="none" stroke="#a6b1bb" stroke-width="11" stroke-linecap="round"/>`}return s;}
 function moduleKind(m){if(m.startsWith('LED'))return 'led';if(button(m))return /(ROJO|VERDE|AZUL|AMARILLO)/.test(m)?'arcade':'tactile';if(m.includes('Buzzer'))return 'buzzer';if(m.includes('Servo'))return 'servo';if(m.includes('HC-SR04'))return 'sonic';if(m.includes('Joystick'))return 'joystick';if(m.includes('Potenciometro'))return 'pot';return 'metal'}
 function relOffset(w,kind){const t=w.terminal.toLowerCase();if(kind==='led')return t.includes('anodo')?-14:14;if(kind==='tactile')return w.pin==='GND'?45:-45;if(kind==='arcade')return w.pin==='GND'?20:-20;if(kind==='buzzer')return w.pin==='GND'?22:-22;if(kind==='sonic')return t==='vcc'?-63:t==='trig'?-21:t==='echo'?21:63;if(kind==='joystick')return t.includes('vrx')?0:t.includes('sw')?49:t.includes('5v')?-24:-49;if(kind==='pot')return t.includes('cursor')?0:t.includes('extremo 1')?-27:27;if(kind==='servo')return t.includes('senal')||t.includes('senial')||t.includes('señal')?-30:t.includes('gnd')?30:0;return 0}
+function renderArduino(){let raw=window.SANLUCAS_PARTS&&window.SANLUCAS_PARTS.uno;if(!raw)return board();return raw.replace(/<svg[^>]*>/,'<svg x="35" y="300" width="410" height="286" viewBox="0 0 212.184 148.032" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">')}
 function draw(p){
 const entries=p.wire||[];
 const mods=[...new Set(entries.map(v=>v.module))].filter(m=>!m.startsWith('Fuente externa'));
@@ -50,9 +51,9 @@ const used5=entries.some(w=>w.pin==='5V'), usedEXT=entries.some(w=>w.pin==='+5V_
 const unit=(SW-50)/mods.length, position=m=>SX+27+(mods.indexOf(m)+.5)*unit;
 let s=`<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-label="Circuito de ${esc(p.title)}: conexiones según tabla de pines."><defs><linearGradient id="boardBlue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0885bf"/><stop offset="1" stop-color="#08639c"/></linearGradient><linearGradient id="metal"><stop stop-color="#f9fafa"/><stop offset=".5" stop-color="#bdcbd5"/><stop offset="1" stop-color="#8595a5"/></linearGradient><linearGradient id="servoBlue"><stop stop-color="#4ba4d9"/><stop offset="1" stop-color="#156ba3"/></linearGradient><radialGradient id="black"><stop stop-color="#4a515d"/><stop offset="1" stop-color="#161c27"/></radialGradient><filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#23374a" flood-opacity=".22"/></filter></defs>`;
 s+=`<rect width="1600" height="1120" fill="#fff"/><rect x="295" y="14" width="1010" height="64" rx="19" fill="#b1d7f6"/>${text(800,57,p.title+' · conexiones estilo Tinkercad',36,'#153455',800,'middle')}`;
-s+=breadboard(used5)+board();
-if(used5)s+=path('M164 633 V695 H465 V584 H490','#e64c55',6);
-s+=path('M216 633 V714 H458 V616 H490','#374756',6);
+s+=breadboard(used5)+renderArduino();
+if(used5){let src=pinPos('5V');s+=path(`M${src.x} ${src.y} V695 H465 V584 H490`,'#e64c55',6);}
+{let src=pinPos('GND');s+=path(`M${src.x} ${src.y} V714 H458 V616 H490`,'#374756',6);}
 if(usedEXT){s+=`<rect x="490" y="666" width="330" height="72" rx="13" fill="#fff6e5" stroke="#dcb26a" stroke-width="3"/>${text(512,692,'FUENTE REGULADA EXTERNA 5 V',18,'#8a6021',800)}${text(512,715,'Servos: 2–3 A · GND común',15,'#5b6671',600)}`;
 s+=path(`M740 738 V751 H1490 V640 H${SX+SW-11}`,'#dd8533',6);
 s+=path('M534 738 V714 H458','#394958',6);
@@ -61,7 +62,7 @@ s+=text(504,655,'+5 V EXTERNO (aislado del +5 V de Arduino)',15,'#bb712c',700)}
 const pinColors={};signals.forEach((w,i)=>{const m=w.module;pinColors[w.pin]=m.includes('ROJO')?'#e54b53':m.includes('VERDE')?'#179955':m.includes('AZUL')?'#2778e6':m.includes('AMARILLO')?'#dba413':m.includes('Buzzer')?'#8f49bd':C[i%C.length]});
 const sorted=signals.slice().sort((a,b)=>{let va=a.pin[0]==='D'?+a.pin.slice(1):100+(+a.pin.slice(1)),vb=b.pin[0]==='D'?+b.pin.slice(1):100+(+b.pin.slice(1));return va-vb});
 sorted.forEach((w,i)=>{const start=pinPos(w.pin),kind=moduleKind(w.module),dest=position(w.module)+relOffset(w,kind),col=pinColors[w.pin],lane=110+i*16;
-if(start.position==='top'){s+=path(`M${start.x} 305 V${lane} H${dest} V412`,col,5);s+=pill(start.x,296,w.pin,col,12)}else{s+=path(`M${start.x} 632 V729 H23 V${lane} H${dest} V412`,col,5);s+=pill(start.x,622,w.pin,col,12)}
+if(start.position==='top'){s+=path(`M${start.x} ${start.y} V${lane} H${dest} V412`,col,5);s+=pill(start.x,296,w.pin,col,12)}else{s+=path(`M${start.x} ${start.y} V729 H23 V${lane} H${dest} V412`,col,5);s+=pill(start.x,start.y+7,w.pin,col,12)}
 s+=`<circle cx="${dest}" cy="412" r="8" fill="${col}" stroke="#fff" stroke-width="3"/>`});
 mods.forEach(m=>{const group=entries.filter(w=>w.module===m),kind=moduleKind(m),x=position(m);
 for(const w of group){const px=x+relOffset(w,kind);if(w.pin==='5V')s+=path(`M${px} 538 V584`,'#ea4852',4);if(w.pin==='+5V_EXT')s+=path(`M${px} 538 V640`,'#d78a40',4);if(w.pin==='GND'||w.pin==='GND_EXT')s+=path(`M${px} 540 V616`,'#394855',4)}});
@@ -92,7 +93,7 @@ if(p.id==='09_Simon_Dice')notes.push('Simón usa pulsadores de 2 bornes.');
 notes.push('La tabla inferior define los pines exactos.');
 notes.forEach((t,i)=>{let words=t.split(' '),rows=[],line='';for(const word of words){if((line+' '+word).length>39){rows.push(line);line=word}else line=(line?line+' ':'')+word}if(line)rows.push(line);const y=840+i*37;s+=`<circle cx="1196" cy="${y-5}" r="4" fill="#186f9b"/>`;rows.forEach((t,j)=>s+=text(1210,y+19*j,t,16,'#344c60',600))});
 s+=`<rect x="25" y="1087" width="1550" height="25" rx="8" fill="#edf6fc"/>${text(40,1105,'Vista didáctica de conexiones. Posición de agujeros orientativa: usar la tabla de terminales y el código de Arduino IDE.',15,'#526a7c',650)}`;
-return s+'</svg>';
+s+=text(42,1094,'Gráfico de Arduino UNO basado en Fritzing · CC BY-SA 3.0 · fritzing.org',12,'#647b8c',500);return s+'</svg>';
 }
 if(typeof P!=='undefined')P.forEach(p=>{p.image='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(draw(p))});
 })();
